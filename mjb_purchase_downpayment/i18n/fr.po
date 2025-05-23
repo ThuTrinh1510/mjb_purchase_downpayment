@@ -1,0 +1,296 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* mjb_purchase_downpayment
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-01-17 13:18+0000\n"
+"PO-Revision-Date: 2020-01-17 14:22+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+"Language: fr\n"
+"X-Generator: Poedit 2.2.3\n"
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.view_purchase_configuration_ext
+msgid "<span class=\"o_form_label\">Down Payments</span>"
+msgstr "<span class=\"o_form_label\">Acomptes</span>"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,help:mjb_purchase_downpayment.field_purchase_advance_payment_inv__deposit_account_id
+msgid "Account used for deposits"
+msgstr "Compte utilisé pour acomptes"
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.view_purchase_advance_payment_inv
+msgid "Cancel"
+msgstr "Annuler"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model,name:mjb_purchase_downpayment.model_res_config_settings
+msgid "Config Settings"
+msgstr "Paramètres de config"
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.purchase_down_ext
+msgid "Create Bill"
+msgstr "Créer facture"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.actions.act_window,name:mjb_purchase_downpayment.action_view_purchase_advance_payment_inv
+msgid "Create Bills"
+msgstr "Créer factures"
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.view_purchase_advance_payment_inv
+msgid "Create Invoices"
+msgstr "Créer factures"
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.view_purchase_advance_payment_inv
+msgid "Create and View Invoices"
+msgstr "Créer et Contrôler Factures"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__create_uid
+msgid "Created by"
+msgstr "Créé par"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__create_date
+msgid "Created on"
+msgstr "Créé le"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__currency_id
+msgid "Currency"
+msgstr "Devise"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__deduct_down_payments
+msgid "Deduct down payments"
+msgstr "Déduction des acomptes"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,help:mjb_purchase_downpayment.field_res_config_settings__mjb_deposit_product_id
+msgid "Default product used for payment advances"
+msgstr "Produit par défaut utilisé pour acomptes"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__display_name
+msgid "Display Name"
+msgstr "Nom affiché"
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/models/purchase.py:0
+#: code:addons/mjb_purchase_downpayment/wizard/purchase_make_invoice_advance.py:0
+#, python-format
+msgid "Down Payment"
+msgstr "Acompte"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__amount
+msgid "Down Payment Amount"
+msgstr "Montant de l'acompte"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__fixed_amount
+msgid "Down Payment Amount(Fixed)"
+msgstr "Montant de l'acompte (fixe)"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__product_id
+msgid "Down Payment Product"
+msgstr "Produit Acompte"
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/wizard/purchase_make_invoice_advance.py:0
+#, python-format
+msgid "Down Payment: %s"
+msgstr "Acompte : %s"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_res_config_settings__mjb_deposit_product_id
+msgid "Down Payments"
+msgstr "Acomptes"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields.selection,name:mjb_purchase_downpayment.selection__purchase_advance_payment_inv__advance_payment_method__fixed
+msgid "Down payment (fixed amount)"
+msgstr "Acompte (montant fixe)"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields.selection,name:mjb_purchase_downpayment.selection__purchase_advance_payment_inv__advance_payment_method__percentage
+msgid "Down payment (percentage)"
+msgstr "Acompte (pourcentage)"
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/wizard/purchase_make_invoice_advance.py:0
+#, python-format
+msgid "Down payment of %s%%"
+msgstr "Acompte de %s%%"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__deposit_account_id
+msgid "Expense Account"
+msgstr "Compte de dépenses"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__has_down_payments
+msgid "Has down payments"
+msgstr "Acomptes associés"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__id
+msgid "ID"
+msgstr ""
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.view_purchase_advance_payment_inv
+msgid "Invoice Sales Order"
+msgstr "Facturer Bon de Commande"
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.view_purchase_advance_payment_inv
+msgid ""
+"Invoices will be created in draft so that you can review\n"
+"                        them before validation."
+msgstr ""
+"Les factures seront créées en brouillon pour vous permettre de les\n"
+"                        contrôler avant validation."
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_order_line__mjb_is_downpayment
+msgid "Is Deposit Line"
+msgstr "Est ligne d'acompte"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__journal_id
+msgid "Journal"
+msgstr "Journal"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model,name:mjb_purchase_downpayment.model_account_move
+msgid "Journal Entries"
+msgstr "Pièces comptables"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv____last_update
+msgid "Last Modified on"
+msgstr "Dernière modification le"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__write_uid
+msgid "Last Updated by"
+msgstr "Dernière modification par"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__write_date
+msgid "Last Updated on"
+msgstr "Dernière modification le"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__count
+msgid "Order Count"
+msgstr "Comptage commandes"
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/models/purchase.py:0
+#, python-format
+msgid "Please define an accounting purchase journal for the company %s (%s)."
+msgstr "Merci de définir un journal d'achats pour la société %s (%s)."
+
+#. module: mjb_purchase_downpayment
+#: model_terms:ir.ui.view,arch_db:mjb_purchase_downpayment.view_purchase_configuration_ext
+msgid "Product used for purchase down payments"
+msgstr "Produit utilisé pour les acomptes d'achat"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model,name:mjb_purchase_downpayment.model_purchase_advance_payment_inv
+msgid "Purchase Advance Payment Invoice"
+msgstr "Facture fournisseur de paiement à l'avance"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model,name:mjb_purchase_downpayment.model_purchase_order
+msgid "Purchase Order"
+msgstr "Commande fournisseur"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model,name:mjb_purchase_downpayment.model_purchase_order_line
+msgid "Purchase Order Line"
+msgstr "Ligne de commande d'achat"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields.selection,name:mjb_purchase_downpayment.selection__purchase_advance_payment_inv__advance_payment_method__received
+msgid "Regular Bills"
+msgstr "Facture normale"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,help:mjb_purchase_downpayment.field_purchase_advance_payment_inv__deposit_taxes_id
+msgid "Taxes used for deposits"
+msgstr "Taxes utilisées pour acomptes"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,help:mjb_purchase_downpayment.field_purchase_advance_payment_inv__fixed_amount
+msgid "The fixed amount to be invoiced in advance, taxes excluded."
+msgstr "Le montant fixe à facturer en avance, hors taxes."
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,help:mjb_purchase_downpayment.field_purchase_advance_payment_inv__amount
+msgid "The percentage of amount to be invoiced in advance, taxes excluded."
+msgstr "Le pourcentage à facturer en avance, hors taxes."
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/wizard/purchase_make_invoice_advance.py:0
+#, python-format
+msgid ""
+"The product used to invoice a down payment should be of type 'Service'. "
+"Please use another product or update this product."
+msgstr ""
+"Le produit utilisé pour facturer une avance doit être de type 'service'. "
+"Veuillez utiliser un autre produit pour modifier ce produit."
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/wizard/purchase_make_invoice_advance.py:0
+#, python-format
+msgid ""
+"The product used to invoice a down payment should have an invoice policy "
+"set to \"Ordered quantities\". Please update your deposit product to be "
+"able to create a deposit invoice."
+msgstr ""
+"Le produit utilisé pour facturer un acompte doit avoir une police de "
+"facture configurée sous \"Quantités commandées\". Veuillez mettre à jour "
+"votre produit de dépôt pour pouvoir créer une facture d'acompte."
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/wizard/purchase_make_invoice_advance.py:0
+#, python-format
+msgid "The value of the down payment amount must be positive."
+msgstr "La valeur du montant de l'avance doit être positif."
+
+#. module: mjb_purchase_downpayment
+#: code:addons/mjb_purchase_downpayment/models/purchase.py:0
+#, python-format
+msgid ""
+"There is no invoiceable line. If a product has a Delivered quantities "
+"invoicing policy, please make sure that a quantity has been delivered."
+msgstr ""
+"Il n'y a pas de ligne facturable. Si un article a pour politique de "
+"facturation \"sur base des quantités délivrées\", assurez-vous qu'une "
+"quantité ait été délivrée."
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__deposit_taxes_id
+msgid "Vendor Taxes"
+msgstr "Taxes Fournisseur"
+
+#. module: mjb_purchase_downpayment
+#: model:ir.model.fields,field_description:mjb_purchase_downpayment.field_purchase_advance_payment_inv__advance_payment_method
+msgid "What do you want to be invoiced?"
+msgstr "Que voulez-vous facturer?"

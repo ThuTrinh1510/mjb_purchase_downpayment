@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="purchase_down_ext" model="ir.ui.view">
+        <field name="name">purchase_down_ext</field>
+        <field name="model">purchase.order</field>
+        <field name="type">form</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/header/button[@name='action_rfq_send']" position="after">
+                <button name="action_view_purchase_downpayment" string="Create Bill"
+                        type="object" class="btn-primary" invisible="invoice_status != 'to invoice'"/>
+                <button name="action_view_purchase_downpayment" string="Create Bill"
+                        type="object" context="{'default_advance_payment_method': 'percentage'}" invisible="state != 'purchase' or invoice_status == 'to invoice'"/>
+            </xpath>
+            <xpath expr="//button[@name='action_create_invoice']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_create_invoice'][2]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
