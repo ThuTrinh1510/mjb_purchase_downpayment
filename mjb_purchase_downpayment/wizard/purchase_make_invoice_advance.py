@@ -9,18 +9,26 @@ from odoo.tools import format_date, frozendict
 
 class purchaseAdvancePaymentInv(models.TransientModel):
     _name = 'purchase.advance.payment.inv'
-    _description = "purchases Advance Payment Invoice"
+    _description = "purchases Advance Payment Bill"
+    
+    @api.model
+    def _default_deposit_account_id(self):
+        return self.product_id._get_product_accounts()['expense']
+
+    @api.model
+    def _default_deposit_taxes_id(self):
+        return self.product_id.supplier_taxes_id
 
     advance_payment_method = fields.Selection(
         selection=[
-            ('delivered', "Regular invoice"),
+            ('delivered', "Regular Bill"),
             ('percentage', "Down payment (percentage)"),
             ('fixed', "Down payment (fixed amount)"),
         ],
-        string="Create Invoice",
+        string="Create Bill",
         default='delivered',
         required=True,
-        help="A standard invoice is issued with all the order lines ready for invoicing,"
+        help="A standard Bill is issued with all the order lines ready for invoicing,"
             "according to their invoicing policy (based on ordered or delivered quantity).")
     count = fields.Integer(string="Order Count", compute='_compute_count')
     purchase_order_ids = fields.Many2many(
@@ -41,11 +49,10 @@ class purchaseAdvancePaymentInv(models.TransientModel):
         store=True)
     amount = fields.Float(
         string="Down Payment Amount",
-        help="The percentage of amount to be invoiced in advance.")
-    # already fixed
+        help="The percentage of amount to be billed in advance.")
     fixed_amount = fields.Monetary(
         string="Down Payment Amount (Fixed)",
-        help="The fixed amount to be invoiced in advance.")
+        help="The fixed amount to be billed in advance.")
     currency_id = fields.Many2one(
         comodel_name='res.currency',
         compute='_compute_currency_id',
@@ -54,14 +61,14 @@ class purchaseAdvancePaymentInv(models.TransientModel):
         comodel_name='res.company',
         compute='_compute_company_id',
         store=True)
-    amount_invoiced = fields.Monetary(
-        string="Already invoiced",
-        compute="_compute_invoice_amounts",
+    amount_billed = fields.Monetary(
+        string="Already billed",
+        compute="_compute_bill_amounts",
         help="Only confirmed down payments are considered.")
-    amount_to_invoice = fields.Monetary(
-        string="Amount to invoice",
-        compute="_compute_invoice_amounts",
-        help="The amount to invoice = purchase Order Total - Confirmed Down Payments.")
+    amount_to_bill = fields.Monetary(
+        string="Amount to bill",
+        compute="_compute_bill_amounts",
+        help="The amount to bill = Purchase Order Total - Confirmed Down Payments.")
 
     # Only used when there is no down payment product available
     #  to setup the down payment product
@@ -70,20 +77,23 @@ class purchaseAdvancePaymentInv(models.TransientModel):
         string="Income Account",
         domain=[('deprecated', '=', False)],
         check_company=True,
-        help="Account used for deposits")
+        help="Account used for deposits",
+        default=_default_deposit_account_id)
+
     deposit_taxes_id = fields.Many2many(
         comodel_name='account.tax',
         string="Customer Taxes",
         domain=[('type_tax_use', '=', 'purchase')],
         check_company=True,
-        help="Taxes used for deposits")
+        help="Taxes used for deposits",
+        default=_default_deposit_taxes_id)
 
     # UI
-    display_draft_invoice_warning = fields.Boolean(compute="_compute_display_draft_invoice_warning")
-    display_invoice_amount_warning = fields.Boolean(compute="_compute_display_invoice_amount_warning")
+    display_draft_bill_warning = fields.Boolean(compute="_compute_display_draft_bill_warning")
+    display_bill_amount_warning = fields.Boolean(compute="_compute_display_bill_amount_warning")
     consolidated_billing = fields.Boolean(
         string="Consolidated Billing", default=True,
-        help="Create one invoice for all orders related to same customer and same invoicing address"
+        help="Create one bill for all orders related to same customer and same invoicing address"
     )
 
     #=== COMPUTE METHODS ===#
@@ -100,8 +110,8 @@ class purchaseAdvancePaymentInv(models.TransientModel):
                 wizard.purchase_order_ids.order_line.filtered('mjb_is_downpayment')
             )
 
-    # next computed fields are only used for down payments invoices and therefore should only
-    # have a value when 1 unique SO is invoiced through the wizard
+    # next computed fields are only used for down payments bills and therefore should only
+    # have a value when 1 unique PO is billed through the wizard
     @api.depends('purchase_order_ids')
     def _compute_currency_id(self):
         self.currency_id = False
@@ -123,29 +133,29 @@ class purchaseAdvancePaymentInv(models.TransientModel):
             if wizard.count == 1:
                 product_id = self.env['ir.config_parameter'].get_param("mjb_purchase_downpayment.mjb_deposit_product_id",False)
                 if not product_id:
-                    product =  wizard.company_id.sale_down_payment_product_id
+                    product =  wizard.company_id.purchase_down_payment_product_id
                 else:
                     product = self.env['product.product'].browse(int(product_id))
                 wizard.product_id = product
 
-    @api.depends('amount', 'fixed_amount', 'advance_payment_method', 'amount_to_invoice')
-    def _compute_display_invoice_amount_warning(self):
+    @api.depends('amount', 'fixed_amount', 'advance_payment_method', 'amount_to_bill')
+    def _compute_display_bill_amount_warning(self):
         for wizard in self:
-            invoice_amount = wizard.fixed_amount
+            bill_amount = wizard.fixed_amount
             if wizard.advance_payment_method == 'percentage':
-                invoice_amount = wizard.amount / 100 * sum(wizard.purchase_order_ids.mapped('amount_total'))
-            wizard.display_invoice_amount_warning = invoice_amount > wizard.amount_to_invoice
+                bill_amount = wizard.amount / 100 * sum(wizard.purchase_order_ids.mapped('amount_total'))
+            wizard.display_bill_amount_warning = bill_amount > wizard.amount_to_bill
 
     @api.depends('purchase_order_ids')
-    def _compute_display_draft_invoice_warning(self):
+    def _compute_display_draft_bill_warning(self):
         for wizard in self:
-            wizard.display_draft_invoice_warning = wizard.purchase_order_ids.invoice_ids.filtered(lambda invoice: invoice.state == 'draft')
+            wizard.display_draft_bill_warning = wizard.purchase_order_ids.invoice_ids.filtered(lambda bill: bill.state == 'draft')
 
     @api.depends('purchase_order_ids')
-    def _compute_invoice_amounts(self):
+    def _compute_bill_amounts(self):
         for wizard in self:
-            wizard.amount_invoiced = sum(wizard.purchase_order_ids._origin.mapped('amount_invoiced'))
-            wizard.amount_to_invoice = sum(wizard.purchase_order_ids._origin.mapped('amount_to_invoice'))
+            wizard.amount_billed = sum(wizard.purchase_order_ids._origin.mapped('amount_billed'))
+            wizard.amount_to_bill = sum(wizard.purchase_order_ids._origin.mapped('amount_to_bill'))
 
     #=== ONCHANGE METHODS ===#
 
@@ -167,28 +177,28 @@ class purchaseAdvancePaymentInv(models.TransientModel):
     @api.constrains('product_id')
     def _check_down_payment_product_is_valid(self):
         for wizard in self:
-            if wizard.count > 1 or not wizard.product_id:
+            if wizard.count > 1 or not wizard.product_id or wizard.advance_payment_method == 'delivered':
                 continue
-            if wizard.product_id.invoice_policy != 'order':
+            if wizard.product_id.purchase_method != 'purchase':
                 raise UserError(_(
-                    "The product used to invoice a down payment should have an invoice policy"
+                    "The product used to bill a down payment should have an bill policy"
                     "set to \"Ordered quantities\"."
-                    " Please update your deposit product to be able to create a deposit invoice."))
+                    " Please update your deposit product to be able to create a deposit bill."))
             if wizard.product_id.type != 'service':
                 raise UserError(_(
-                    "The product used to invoice a down payment should be of type 'Service'."
+                    "The product used to bill a down payment should be of type 'Service'."
                     " Please use another product or update this product."))
 
     #=== ACTION METHODS ===#
 
     def create_invoices(self):
         self._check_amount_is_positive()
-        invoices = self._create_invoices(self.purchase_order_ids)
-        return self.purchase_order_ids.action_view_invoice(invoices)
+        bills = self._create_invoices(self.purchase_order_ids)
+        return self.purchase_order_ids.action_view_invoice(bills)
 
-    def view_draft_invoices(self):
+    def view_draft_bills(self):
         return {
-            'name': _('Draft Invoices'),
+            'name': _('Draft Bills'),
             'type': 'ir.actions.act_window',
             'view_mode': 'tree',
             'views': [(False, 'list'), (False, 'form')],
@@ -209,7 +219,7 @@ class purchaseAdvancePaymentInv(models.TransientModel):
 
             # Create deposit product if necessary
             if not self.product_id:
-                self.company_id.sudo().sale_down_payment_product_id = self.env['product.product'].create(
+                self.company_id.sudo().purchase_down_payment_product_id = self.env['product.product'].create(
                     self._prepare_down_payment_product_values()
                 )
                 self._compute_product_id()
@@ -225,19 +235,19 @@ class purchaseAdvancePaymentInv(models.TransientModel):
                 self._prepare_down_payment_lines_values(order)
             )
 
-            invoice = self.env['account.move'].sudo().create(
+            bill = self.env['account.move'].sudo().create(
                 self._prepare_invoice_values(order, down_payment_lines)
             )
 
-            # Ensure the invoice total is exactly the expected fixed amount.
+            # Ensure the bill total is exactly the expected fixed amount.
             if self.advance_payment_method == 'fixed':
-                delta_amount = (invoice.amount_total - self.fixed_amount) * (1 if invoice.is_inbound() else -1)
+                delta_amount = (bill.amount_total - self.fixed_amount) * (1 if bill.is_inbound() else -1)
                 if not order.currency_id.is_zero(delta_amount):
-                    receivable_line = invoice.line_ids\
-                        .filtered(lambda aml: aml.account_id.account_type == 'asset_receivable')[:1]
-                    product_lines = invoice.line_ids\
+                    receivable_line = bill.line_ids\
+                        .filtered(lambda aml: aml.account_id.account_type == 'liability_payable')[:1]
+                    product_lines = bill.line_ids\
                         .filtered(lambda aml: aml.display_type == 'product')
-                    tax_lines = invoice.line_ids\
+                    tax_lines = bill.line_ids\
                         .filtered(lambda aml: aml.tax_line_id.amount_type not in (False, 'fixed'))
 
                     if product_lines and tax_lines and receivable_line:
@@ -260,24 +270,24 @@ class purchaseAdvancePaymentInv(models.TransientModel):
                                 )
                                 remaining -= amt
                                 line_commands.append(Command.update(line.id, {attr: line[attr] + amt * sign}))
-                        invoice.line_ids = line_commands
+                        bill.line_ids = line_commands
 
-            # Unsudo the invoice after creation if not already sudoed
-            invoice = invoice.sudo(self.env.su)
+            # Unsudo the bill after creation if not already sudoed
+            bill = bill.sudo(self.env.su)
 
             poster = self.env.user._is_internal() and self.env.user.id or SUPERUSER_ID
-            invoice.with_user(poster).message_post_with_source(
+            bill.with_user(poster).message_post_with_source(
                 'mail.message_origin_link',
-                render_values={'self': invoice, 'origin': order},
+                render_values={'self': bill, 'origin': order},
                 subtype_xmlid='mail.mt_note',
             )
 
-            title = _("Down payment invoice")
+            title = _("Down payment bill")
             order.with_user(poster).message_post(
-                body=_("%s has been created", invoice._get_html_link(title=title)),
+                body=_("%s has been created", bill._get_html_link(title=title)),
             )
 
-            return invoice
+            return bill
 
     def _prepare_down_payment_product_values(self):
         self.ensure_one()
@@ -285,7 +295,7 @@ class purchaseAdvancePaymentInv(models.TransientModel):
             'name': _('Down payment'),
             'product_qty': 0.0,
             'type': 'service',
-            'invoice_policy': 'order',
+            'purchase_method': 'purchase',
             'company_id': self.company_id.id,
             'property_account_income_id': self.deposit_account_id.id,
             'taxes_id': [Command.set(self.deposit_taxes_id.ids)],
@@ -295,7 +305,7 @@ class purchaseAdvancePaymentInv(models.TransientModel):
     def _prepare_down_payment_section_values(self, order):
         context = {'lang': order.partner_id.lang}
 
-        so_values = {
+        po_values = {
             'name': _('Down Payments'),
             'product_qty': 0.0,
             'order_id': order.id,
@@ -305,7 +315,7 @@ class purchaseAdvancePaymentInv(models.TransientModel):
         }
 
         del context
-        return so_values
+        return po_values
 
     def _prepare_down_payment_lines_values(self, order):
         """ Create one down payment line per tax or unique taxes combination.
@@ -324,15 +334,6 @@ class purchaseAdvancePaymentInv(models.TransientModel):
         order_lines = order.order_line.filtered(lambda l: not l.display_type and not l.mjb_is_downpayment)
         base_downpayment_lines_values = self._prepare_base_downpayment_line_values(order)
 
-        # tax_base_line_dicts = [
-        #     line._convert_to_tax_base_line_dict(
-        #         analytic_distribution=line.analytic_distribution,
-        #         handle_price_include=False
-        #     )
-        #     for line in order_lines
-        # ]
-        # computed_taxes = self.env['account.tax']._compute_taxes(
-        #     tax_base_line_dicts)
         computed_taxes = self.env['account.tax']._compute_taxes([
                     line._convert_to_tax_base_line_dict()
                     for line in order_lines
@@ -388,7 +389,7 @@ class purchaseAdvancePaymentInv(models.TransientModel):
     def _prepare_base_downpayment_line_values(self, order):
         self.ensure_one()
         context = {'lang': order.partner_id.lang}
-        so_values = {
+        po_values = {
             'name': _(
                 'Down Payment: %(date)s (Draft)', date=format_date(self.env, fields.Date.today())
             ),
@@ -400,19 +401,8 @@ class purchaseAdvancePaymentInv(models.TransientModel):
             'sequence': order.order_line and order.order_line[-1].sequence + 1 or 10,
         }
         del context
-        return so_values
+        return po_values
 
-    # def _prepare_invoice_values(self, order, so_lines):
-    #     self.ensure_one()
-    #     return {
-    #         **order._prepare_invoice(),
-    #         'invoice_line_ids': [Command.create(
-    #             line._prepare_invoice_line(
-    #                 name=self._get_down_payment_description(order),
-    #                 quantity=1.0,
-    #             )
-    #         ) for line in so_lines],
-    #     }
     def _prepare_invoice_values(self, order, po_lines):
         self.ensure_one()
         return {

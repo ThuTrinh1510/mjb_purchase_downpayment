@@ -12,18 +12,18 @@ _logger = logging.getLogger(__name__)
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
-    amount_to_invoice = fields.Monetary(string="Un-invoiced Balance", compute='_compute_amount_to_invoice')
-    amount_invoiced = fields.Monetary(string="Already invoiced", compute='_compute_amount_invoiced')
+    amount_to_bill = fields.Monetary(string="Un-billed Balance", compute='_compute_amount_to_invoice')
+    amount_billed = fields.Monetary(string="Already billed", compute='_compute_amount_billed')
     
-    @api.depends('order_line.amount_to_invoice')
+    @api.depends('order_line.amount_to_bill')
     def _compute_amount_to_invoice(self):
         for order in self:
-            order.amount_to_invoice = sum(order.order_line.mapped('amount_to_invoice'))
+            order.amount_to_bill = sum(order.order_line.mapped('amount_to_bill'))
 
-    @api.depends('order_line.amount_invoiced')
-    def _compute_amount_invoiced(self):
+    @api.depends('order_line.amount_billed')
+    def _compute_amount_billed(self):
         for order in self:
-            order.amount_invoiced = sum(order.order_line.mapped('amount_invoiced'))
+            order.amount_billed = sum(order.order_line.mapped('amount_billed'))
 
     #################################################################################
     # Override Odoo Button, to call Wizard Instead of just going to entries view
@@ -52,26 +52,30 @@ class PurchaseOrder(models.Model):
 
     #################################################################################
     # Do not copy if line is downpayment
+
     def copy_data(self, default=None):
         if default is None:
             default = {}
         if 'order_line' not in default:
-            default['order_line'] = [(0, 0, line.copy_data()[0]) for line in self.order_line.filtered(lambda l: not l.mjb_is_downpayment)]
-        return super(PurchaseOrder, self).copy_data(default)
+            default['order_line'] = [
+                Command.create(line.copy_data()[0])
+                for line in self.order_line.filtered(lambda l: not l.mjb_is_downpayment)
+            ]
+        return super().copy_data(default)
 
     def _get_invoice_grouping_keys(self):
         return ['company_id', 'partner_id', 'currency_id']
 
     def _nothing_to_invoice_error(self):
-        msg = _("""There is nothing to invoice!\n
+        msg = _("""There is nothing to bill!\n
 Reason(s) of this behavior could be:
-- You should deliver your products before invoicing them: Click on the "truck" icon (top-right of your screen) and follow instructions.
-- You should modify the invoicing policy of your product: Open the product, go to the "Sales tab" and modify invoicing policy from "delivered quantities" to "ordered quantities".
+- You should receive your products before billing them: Click on the "truck" icon (top-right of your screen) and follow instructions.
+- You should modify the billing policy of your product: Open the product, go to the "Sales tab" and modify billing policy from "received quantities" to "ordered quantities".
         """)
         return UserError(msg)
 
     def _get_invoiceable_lines(self, final=False):
-        """Return the invoiceable lines for order `self`."""
+        """Return the billable lines for order `self`."""
         down_payment_line_ids = []
         invoiceable_line_ids = []
         pending_section = None
@@ -79,7 +83,7 @@ Reason(s) of this behavior could be:
 
         for line in self.order_line:
             if line.display_type == 'line_section':
-                # Only invoice the section if one of its lines is invoiceable
+                # Only bill the section if one of its lines is invoiceable
                 pending_section = line
                 continue
             if line.display_type != 'line_note' and float_is_zero(line.qty_to_invoice, precision_digits=precision):
@@ -87,7 +91,7 @@ Reason(s) of this behavior could be:
             if line.qty_to_invoice > 0 or (line.qty_to_invoice < 0 and final) or line.display_type == 'line_note':
                 if line.mjb_is_downpayment:
                     # Keep down payment lines separately, to put them together
-                    # at the end of the invoice, in a specific dedicated section.
+                    # at the end of the bill, in a specific dedicated section.
                     down_payment_line_ids.append(line.id)
                     continue
                 if pending_section:
@@ -120,8 +124,19 @@ Reason(s) of this behavior could be:
         del context
         return down_payments_section_line
 
+    def _nothing_to_invoice_error_message(self):
+        return _(
+            "Cannot create an bill. No items are available to bill.\n\n"
+            "To resolve this issue, please ensure that:\n"
+            "   \u2022 The products have been received before attempting to bill them.\n"
+            "   \u2022 The invoicing policy of the product is configured correctly.\n\n"
+            "If you want to bill based on ordered quantities instead:\n"
+            "   \u2022 For consumable or storable products, open the product, go to the 'General Information' tab and change the 'Invoicing Policy' from 'Delivered Quantities' to 'Ordered Quantities'.\n"
+            "   \u2022 For services (and other products), change the 'Invoicing Policy' to 'Prepaid/Fixed Price'.\n"
+        )
+
     def _create_invoices(self, grouped=False, final=False, date=None):
-        """ Create invoice(s) for the given Sales Order(s).
+        """ Create bill(s) for the given Purchase Order(s).
 
         :param bool grouped: if True, invoices are grouped by SO id.
             If False, invoices are grouped by keys returned by :meth:`_get_invoice_grouping_keys`
@@ -139,8 +154,8 @@ Reason(s) of this behavior could be:
                 return self.env['account.move']
 
         # 1) Create invoices.
-        invoice_vals_list = []
-        invoice_item_sequence = 0 # Incremental sequencing to keep the lines order on the invoice.
+        bill_vals_list = []
+        invoice_item_sequence = 0 # Incremental sequencing to keep the lines order on the bill.
         for order in self:
             order = order.with_company(order.company_id).with_context(lang=order.partner_id.lang)
 
@@ -171,22 +186,22 @@ Reason(s) of this behavior could be:
                 invoice_item_sequence += 1
 
             invoice_vals['invoice_line_ids'] += invoice_line_vals
-            invoice_vals_list.append(invoice_vals)
+            bill_vals_list.append(invoice_vals)
 
-        if not invoice_vals_list and self._context.get('raise_if_nothing_to_invoice', True):
+        if not bill_vals_list and self._context.get('raise_if_nothing_to_invoice', True):
             raise UserError(self._nothing_to_invoice_error_message())
 
         # 2) Manage 'grouped' parameter: group by (partner_id, currency_id).
         if not grouped:
-            new_invoice_vals_list = []
+            new_bill_vals_list = []
             invoice_grouping_keys = self._get_invoice_grouping_keys()
-            invoice_vals_list = sorted(
-                invoice_vals_list,
+            bill_vals_list = sorted(
+                bill_vals_list,
                 key=lambda x: [
                     x.get(grouping_key) for grouping_key in invoice_grouping_keys
                 ]
             )
-            for _grouping_keys, invoices in groupby(invoice_vals_list, key=lambda x: [x.get(grouping_key) for grouping_key in invoice_grouping_keys]):
+            for _grouping_keys, invoices in groupby(bill_vals_list, key=lambda x: [x.get(grouping_key) for grouping_key in invoice_grouping_keys]):
                 origins = set()
                 payment_refs = set()
                 refs = set()
@@ -204,21 +219,21 @@ Reason(s) of this behavior could be:
                     'invoice_origin': ', '.join(origins),
                     'payment_reference': len(payment_refs) == 1 and payment_refs.pop() or False,
                 })
-                new_invoice_vals_list.append(ref_invoice_vals)
-            invoice_vals_list = new_invoice_vals_list
+                new_bill_vals_list.append(ref_invoice_vals)
+            bill_vals_list = new_bill_vals_list
 
         # 3) Create invoices.
 
-        # As part of the invoice creation, we make sure the sequence of multiple SO do not interfere
-        # in a single invoice. Example:
-        # SO 1:
+        # As part of the bill creation, we make sure the sequence of multiple PO do not interfere
+        # in a single bill. Example:
+        # PO 1:
         # - Section A (sequence: 10)
         # - Product A (sequence: 11)
-        # SO 2:
+        # PO 2:
         # - Section B (sequence: 10)
         # - Product B (sequence: 11)
         #
-        # If SO 1 & 2 are grouped in the same invoice, the result will be:
+        # If PO 1 & 2 are grouped in the same bill, the result will be:
         # - Section A (sequence: 10)
         # - Section B (sequence: 10)
         # - Product A (sequence: 11)
@@ -226,18 +241,18 @@ Reason(s) of this behavior could be:
         #
         # Resequencing should be safe, however we resequence only if there are less invoices than
         # orders, meaning a grouping might have been done. This could also mean that only a part
-        # of the selected SO are invoiceable, but resequencing in this case shouldn't be an issue.
-        if len(invoice_vals_list) < len(self):
-            SaleOrderLine = self.env['sale.order.line']
-            for invoice in invoice_vals_list:
+        # of the selected PO are billable, but resequencing in this case shouldn't be an issue.
+        if len(bill_vals_list) < len(self):
+            PurchaseOrderLine = self.env['purchase.order.line']
+            for bill in bill_vals_list:
                 sequence = 1
-                for line in invoice['invoice_line_ids']:
-                    line[2]['sequence'] = SaleOrderLine._get_invoice_line_sequence(new=sequence, old=line[2]['sequence'])
+                for line in bill['invoice_line_ids']:
+                    line[2]['sequence'] = PurchaseOrderLine._get_invoice_line_sequence(new=sequence, old=line[2]['sequence'])
                     sequence += 1
 
-        # Manage the creation of invoices in sudo because a salesperson must be able to generate an invoice from a
-        # sale order without "billing" access rights. However, he should not be able to create an invoice from scratch.
-        moves = self.env['account.move'].sudo().with_context(default_move_type='out_invoice').create(invoice_vals_list)
+        # Manage the creation of invoices in sudo because a salesperson must be able to generate an bill from a
+        # purchase order without "billing" access rights. However, he should not be able to create an bill from scratch.
+        moves = self.env['account.move'].sudo().with_context(default_move_type='in_invoice').create(bill_vals_list)
 
         # 4) Some moves might actually be refunds: convert them if the total amount is negative
         # We do this after the moves have been created since we need taxes, etc. to know if the total
@@ -250,8 +265,8 @@ Reason(s) of this behavior could be:
                 # This amount is tax included. This can lead to rounding issues.
                 # E.g. a user wants a 100€ DP on a product with 21% tax.
                 # 100 / 1.21 = 82.64, 82.64 * 1,21 = 99.99
-                # This is already corrected by adding/removing the missing cents on the DP invoice,
-                # but must also be accounted for on the final invoice.
+                # This is already corrected by adding/removing the missing cents on the DP bill,
+                # but must also be accounted for on the final bill.
 
                 delta_amount = 0
                 for order_line in self.order_line:
@@ -300,7 +315,7 @@ Reason(s) of this behavior could be:
 
             move.message_post_with_source(
                 'mail.message_origin_link',
-                render_values={'self': move, 'origin': move.line_ids.sale_line_ids.order_id},
+                render_values={'self': move, 'origin': move.line_ids.purchase_line_id.order_id},
                 subtype_xmlid='mail.mt_note',
             )
         return moves
@@ -311,37 +326,37 @@ class PurchaseOrderLine(models.Model):
 
     mjb_is_downpayment = fields.Boolean(string='Is Deposit Line')
 
-    amount_to_invoice = fields.Monetary(
-        string="Un-invoiced Balance",
+    amount_to_bill = fields.Monetary(
+        string="Un-billed Balance",
         compute='_compute_amount_to_invoice'
     )
 
-    amount_invoiced = fields.Monetary(
-        string="Invoiced Amount",
-        compute='_compute_amount_invoiced'
+    amount_billed = fields.Monetary(
+        string="Billed Amount",
+        compute='_compute_amount_billed'
     )
 
     @api.depends('invoice_lines', 'invoice_lines.price_total', 'invoice_lines.move_id.state')
-    def _compute_amount_invoiced(self):
+    def _compute_amount_billed(self):
         for line in self:
-            amount_invoiced = 0.0
+            amount_billed = 0.0
             for invoice_line in line._get_invoice_lines():
-                invoice = invoice_line.move_id
-                if invoice.state == 'posted':
-                    invoice_date = invoice.invoice_date or fields.Date.context_today(self)
+                bill = invoice_line.move_id
+                if bill.state == 'posted':
+                    bill_date = bill.invoice_date or fields.Date.context_today(self)
                     # Convert the price_total to the currency of the purchase order line
-                    amount_invoiced_unsigned = invoice_line.currency_id._convert(
-                        invoice_line.price_total, line.currency_id, line.company_id, invoice_date
+                    amount_billed_unsigned = invoice_line.currency_id._convert(
+                        invoice_line.price_total, line.currency_id, line.company_id, bill_date
                     )
                     # Handle direction sign for vendor bills and refunds
-                    if invoice.move_type == 'in_invoice':
-                        amount_invoiced += amount_invoiced_unsigned
-                    elif invoice.move_type == 'in_refund':
-                        amount_invoiced -= amount_invoiced_unsigned
-            line.amount_invoiced = amount_invoiced
+                    if bill.move_type == 'in_invoice':
+                        amount_billed += amount_billed_unsigned
+                    elif bill.move_type == 'in_refund':
+                        amount_billed -= amount_billed_unsigned
+            line.amount_billed = amount_billed
 
-    @api.depends('price_total', 'amount_invoiced')
+    @api.depends('price_total', 'amount_billed')
     def _compute_amount_to_invoice(self):
         for line in self:
-            # Calculate the amount that is yet to be invoiced
-            line.amount_to_invoice = line.price_total - line.amount_invoiced
+            # Calculate the amount that is yet to be billed
+            line.amount_to_bill = line.price_total - line.amount_billed

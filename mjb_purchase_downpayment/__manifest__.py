@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Purchase Downpayment',
-    'version': '17.0.0.1',
+    'name': 'MJB - Purchase Downpayment',
+    'version': '17.0.0.3',
     'author': 'Majorbird',
     'website': 'https://majorbird.cn',
     'category': 'Inventory/Purchase',
@@ -14,11 +14,11 @@
     'depends': [
         'purchase'
     ],
-    'data': [
-        'security/ir.model.access.csv',
-        'views/res_config_views.xml',
-        'views/purchase.xml',
-        'wizard/purchase_make_invoice_advance_views.xml',
+    "data": [
+        "security/ir.model.access.csv",
+        "views/res_config_views.xml",
+        "views/purchase.xml",
+        "wizard/purchase_make_invoice_advance_views.xml",
     ],
     'css': [],
     'js': [],

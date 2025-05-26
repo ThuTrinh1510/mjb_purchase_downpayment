@@ -1,73 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-        <!-- <record id="view_purchase_advance_payment_inv" model="ir.ui.view">
-            <field name="name">Invoice Orders</field>
-            <field name="model">purchase.advance.payment.inv</field>
-            <field name="arch" type="xml">
-                <form string="Invoice purchases Order">
-                    <p class="oe_grey">
-                        Invoices will be created in draft so that you can review
-                        them before validation.
-                    </p>
-                    <group>
-                        <field name="count" invisible="count == 1" readonly="True"/>
-                        <field name="advance_payment_method" class="oe_inline" widget="radio" invisible="count > 1"/>
-                        <field name="has_down_payments" invisible="1" />
-                        <label for="deduct_down_payments" string="" invisible="not has_down_payments or advance_payment_method != 'received'"/>
-                        <div invisible="not has_down_payments or advance_payment_method != 'received'">
-                            <field name="deduct_down_payments" nolabel="1"/>
-                            <label for="deduct_down_payments"/>
-                        </div>
-                        <field name="product_id"
-                            context="{'default_purchase_method': 'purchase'}" class="oe_inline"
-                            invisible="1"/>
-                        <label for="amount" invisible="advance_payment_method not in ('fixed','percentage')"/>
-                        <div invisible="advance_payment_method not in ('fixed','percentage')">
-                            <field name="currency_id" invisible="1"/>
-                            <field name="fixed_amount"
-                                required="advance_payment_method == 'fixed'" invisible="advance_payment_method != 'fixed'" class="oe_inline"/>
-                            <field name="amount"
-                                required="advance_payment_method == 'percentage'" invisible="advance_payment_method != 'percentage'" class="oe_inline"/>
-                            <span
-                                invisible="advance_payment_method != 'percentage'" class="oe_inline">%</span>
-                        </div>
-                        <field name="deposit_account_id" options="{'no_create': True}" class="oe_inline"
-                            invisible="advance_payment_method not in ('fixed', 'percentage') or not product_id" groups="account.group_account_manager"/>
-                        <field name="deposit_taxes_id" class="oe_inline" widget="many2many_tags"
-                            domain="[('type_tax_use','=','purchase')]"
-                            invisible="advance_payment_method not in ('fixed', 'percentage') or not product_id"/>
-                        <field name="journal_id"/>
-                    </group>
-                    <footer>
-                        <button name="create_invoices" id="create_bill_open" string="Create and View Invoices" type="object"
-                            context="{'open_invoices': True}" class="btn-primary"/>
-                        <button name="create_invoices" id="create_bills" string="Create Invoices" type="object" class="btn-primary"/>
-                        <button string="Cancel" class="btn-default" special="cancel"/>
-                    </footer>
-                </form>
-            </field>
-        </record>
-
-        <record id="action_view_purchase_advance_payment_inv" model="ir.actions.act_window">
-            <field name="name">Create Bills</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">purchase.advance.payment.inv</field>
-            <field name="view_mode">form</field>
-            <field name="target">new</field>
-            <field name="groups_id" eval="[(4,ref('purchase.group_purchase_user'))]"/>
-        </record> -->
 
     <record id="view_purchase_advance_payment_inv" model="ir.ui.view">
-        <field name="name">Invoice Orders</field>
+        <field name="name">Create Vendor Bills</field>
         <field name="model">purchase.advance.payment.inv</field>
         <field name="arch" type="xml">
-            <form string="Invoice purchases Order">
-                <field name="display_draft_invoice_warning" invisible="1"/>
+            <form string="Create Vendor Bills">
+                <field name="display_draft_bill_warning" invisible="1"/>
                 <field name="has_down_payments" invisible="1"/>
-                <div class="alert alert-warning pb-1" role="alert" invisible="not display_draft_invoice_warning">
-                    <p>There are existing <a name="view_draft_invoices" type="object">Draft Invoices</a> for this purchase Order.</p>
+                <div class="alert alert-warning pb-1" role="alert" invisible="not display_draft_bill_warning">
+                    <p>There are existing <a name="view_draft_bills" type="object">Draft Bills</a> for this purchase Order.</p>
                     <p invisible="advance_payment_method != 'delivered'">
-                        The new invoice will deduct draft invoices linked to this purchase order.
+                        The new Bill will deduct draft Bills linked to this purchase order.
                     </p>
                 </div>
                 <group>
@@ -85,7 +29,7 @@
                     <label for="amount"/>
                     <div id="payment_method_details">
                         <field name="currency_id" invisible="1"/>
-                        <field name="display_invoice_amount_warning" invisible="1"/>
+                        <field name="display_bill_amount_warning" invisible="1"/>
                         <field name="fixed_amount"
                             invisible="advance_payment_method != 'fixed'"
                             required="advance_payment_method == 'fixed'"
@@ -96,9 +40,9 @@
                             class="oe_inline"/>
                         <span invisible="advance_payment_method != 'percentage'"
                             class="oe_inline">% </span>
-                        <span invisible="not display_invoice_amount_warning"
+                        <span invisible="not display_bill_amount_warning"
                               class="oe_inline text-danger"
-                              title="The Down Payment is greater than the amount remaining to be invoiced.">
+                              title="The Down Payment is greater than the amount remaining to be billed.">
                             <i class="fa fa-warning"/>
                         </span>
                     </div>
@@ -111,13 +55,13 @@
                         invisible="product_id"/>
                 </group>
                 <group invisible="not has_down_payments">
-                    <field name="amount_invoiced"/>
-                    <field name="amount_to_invoice"/>
+                    <field name="amount_billed"/>
+                    <field name="amount_to_bill"/>
                 </group>
                 <footer>
                     <button name="create_invoices" type="object"
                         id="create_invoice_open"
-                        string="Create Draft Invoice"
+                        string="Create Draft Bill"
                         class="btn-primary" data-hotkey="q"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                 </footer>

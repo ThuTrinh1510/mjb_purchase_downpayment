@@ -11,7 +11,7 @@
                     <setting help="Product used for purchase down payments">
                         <span class="o_form_label">Down Payments</span>
                         <div class="text-muted">
-                            <field name="mjb_deposit_product_id"/>
+                            <field name="po_deposit_default_product_id" context="{'default_detailed_type':'service','default_purchase_method':'purchase'}"/>
                         </div>
                     </setting>
                 </block>
