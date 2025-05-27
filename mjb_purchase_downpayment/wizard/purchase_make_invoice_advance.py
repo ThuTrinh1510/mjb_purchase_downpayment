@@ -299,7 +299,6 @@ class purchaseAdvancePaymentInv(models.TransientModel):
             'company_id': self.company_id.id,
             'property_account_income_id': self.deposit_account_id.id,
             'taxes_id': [Command.set(self.deposit_taxes_id.ids)],
-            'is_downpayment': True,
         }
 
     def _prepare_down_payment_section_values(self, order):
